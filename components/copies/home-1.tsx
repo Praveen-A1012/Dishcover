@@ -94,7 +94,7 @@ export default function Home() {
             ) : recommendations.length > 0 ? (
               <div className="flex gap-4 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 pr-2">
                 {recommendations.map((rec) => (
-                  <div key={rec.id || rec.recipeName} className="flex-shrink-0 w-64">
+                  <div key={(rec as any).id || rec.recipeName} className="flex-shrink-0 w-64">
                     <RecipeCard recipe={rec} />
                   </div>
                 ))}
