@@ -1,0 +1,92 @@
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/db";
+import { verifyToken } from "@/lib/auth";
+
+export async function POST(req: Request) {
+  try {
+    // 🔒 1. Extract and verify token
+    const token = req.headers.get("authorization")?.replace("Bearer ", "");
+    if (!token) {
+      return NextResponse.json({ error: "Missing token" }, { status: 401 });
+    }
+
+    const payload = verifyToken(token);
+    if (!payload) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const userId = payload.userId || payload.id;
+    if (!userId) {
+      return NextResponse.json({ error: "Invalid token payload" }, { status: 401 });
+    }
+
+    // 🧠 2. Parse request body
+    const body = await req.json();
+    const { name, phone, address, heightCm, weightKg, diet } = body;
+
+    console.log("[PROFILE UPDATE] Incoming payload:", {
+      userId,
+      name,
+      phone,
+      address,
+      heightCm,
+      weightKg,
+      diet,
+    });
+
+    // 🧮 3. Helper to safely convert numbers
+    const parseNumberField = (val: any) => {
+      if (val === undefined || val === null || val === "") return null;
+      const num = Number(val);
+      return isNaN(num) ? null : num;
+    };
+
+    const parsedHeight = parseNumberField(heightCm);
+    const parsedWeight = parseNumberField(weightKg);
+
+    // 🧩 4. Update user in DB
+    const user = await prisma.user.update({
+      where: { id: userId },
+      data: {
+        name,
+        phone,
+        address,
+        heightCm: parsedHeight,
+        weightKg: parsedWeight,
+        diet,
+      },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        phone: true,
+        address: true,
+        heightCm: true,
+        weightKg: true,
+        diet: true,
+      },
+    });
+
+    console.log("[PROFILE UPDATE] Updated user:", user);
+
+    // ✅ 5. Return updated profile
+    return NextResponse.json({
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        phone: user.phone,
+        address: user.address,
+        heightCm: user.heightCm,
+        weightKg: user.weightKg,
+        diet: user.diet,
+      },
+    });
+  } catch (err) {
+    console.error("[PROFILE UPDATE ERROR]:", err);
+    return NextResponse.json(
+      { error: "Failed to update profile" },
+      { status: 500 }
+    );
+  }
+}

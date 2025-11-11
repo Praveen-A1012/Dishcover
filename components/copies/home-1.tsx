@@ -18,18 +18,20 @@ export default function Home() {
   useEffect(() => {
     async function fetchRecommendations() {
       try {
-        const userStr = localStorage.getItem("user");
-        let url = "/api/recommendations";
-        if (userStr) {
-          const user = JSON.parse(userStr);
-          if (user && user.id) {
-            url = `/api/recommendations?userId=${user.id}`;
-          }
-        }
-        const res = await fetch(url);
+        const token = localStorage.getItem("token");
+        const url = token
+          ? "/api/recommendations/personalized"
+          : "/api/recommendations";
+
+        const res = await fetch(url, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
+
         if (res.ok) {
           const data = await res.json();
-          setRecommendations(data.recommendations || []);
+          let recs = data.recommendations || [];
+          recs = recs.sort(() => 0.5 - Math.random()).slice(0, 10);
+          setRecommendations(recs);
         } else {
           console.warn("Failed to load recommendations:", res.status);
           setRecommendations([]);
@@ -41,6 +43,7 @@ export default function Home() {
         setLoadingRecs(false);
       }
     }
+
     fetchRecommendations();
   }, []);
 
@@ -81,54 +84,49 @@ export default function Home() {
 
         {/* === Recommendations Section (Horizontal Scroll) === */}
         {!recipe && (
-          <section className="w-full max-w-6xl mx-auto flex flex-col gap-8">
-            {/* Fixed-height, scrollable recommendations window */}
-            <div className="flex flex-col items-center justify-start">
-              <div
-                className="bg-white/90 rounded-2xl shadow-xl border border-gray-200 w-full max-w-3xl mx-auto p-4"
-                style={{ height: 400, maxHeight: 400, minHeight: 400, display: 'flex', flexDirection: 'column' }}
-              >
-                <h2 className="text-2xl font-bold text-center mb-4">Recommended Recipes</h2>
-                <div className="flex-1 overflow-y-auto pr-2" style={{ minHeight: 0 }}>
-                  {loadingRecs ? (
-                    <p className="text-center text-gray-500">Loading recipes...</p>
-                  ) : recommendations.length > 0 ? (
-                    <div className="flex flex-col gap-4">
-                      {recommendations.map((rec) => (
-                        <div key={(rec as any).id || rec.recipeName} className="w-full">
-                          <RecipeCard recipe={rec} />
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-center text-gray-500">No recommendations found.</p>
-                  )}
-                </div>
-              </div>
-            </div>
-            {/* Recipe Generator always below recommendations window, never pushed down */}
-            <div className="w-full max-w-2xl mx-auto">
-              <section className="bg-card/40 p-6 rounded-xl shadow-lg mt-8">
-                <h2 className="text-2xl font-semibold text-center mb-4">
-                  Generate a New Recipe
-                </h2>
-                <RecipeForm onSubmit={handleRecipeRequest} isLoading={isLoading} />
-                {error && (
-                  <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-600">
-                    {error}
+          <section className="w-full max-w-6xl mx-auto bg-card/50 p-6 rounded-xl shadow-lg">
+            <h2 className="text-3xl font-bold text-gray-800 mb-4 text-center">
+              Recommended for You
+            </h2>
+
+            {loadingRecs ? (
+              <p className="text-center text-gray-500">Loading recipes...</p>
+            ) : recommendations.length > 0 ? (
+              <div className="flex gap-4 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 pr-2">
+                {recommendations.map((rec) => (
+                  <div key={rec.id || rec.recipeName} className="flex-shrink-0 w-64">
+                    <RecipeCard recipe={rec} />
                   </div>
-                )}
-              </section>
-            </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-center text-gray-500">
+                No recommendations found.
+              </p>
+            )}
           </section>
         )}
 
         {/* === Recipe Generator Container === */}
-        {recipe && (
-          <section className="w-full max-w-2xl mx-auto bg-card/40 p-6 rounded-xl shadow-lg">
+        <section className="w-full max-w-2xl mx-auto bg-card/40 p-6 rounded-xl shadow-lg">
+          {!recipe ? (
+            <>
+              <h2 className="text-2xl font-semibold text-center mb-4">
+                Generate a New Recipe
+              </h2>
+
+              <RecipeForm onSubmit={handleRecipeRequest} isLoading={isLoading} />
+
+              {error && (
+                <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-600">
+                  {error}
+                </div>
+              )}
+            </>
+          ) : (
             <RecipeDisplay recipe={recipe} onStartOver={handleStartOver} />
-          </section>
-        )}
+          )}
+        </section>
       </main>
 
       {/* === Footer === */}

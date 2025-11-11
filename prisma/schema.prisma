@@ -1,0 +1,89 @@
+// prisma/schema.prisma
+datasource db {
+  provider = "postgresql" // Changed from sqlite for production
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id          String                   @id @default(uuid())
+  email       String                   @unique
+  password    String
+  name        String?
+  age         Int?
+  phone       String?
+  address     String?
+  heightCm    Int?
+  weightKg    Int?
+  diet        String?
+  createdAt   DateTime                 @default(now())
+  favorites   Favorite[]
+  reviews     Review[]
+  suggestions SubstitutionSuggestion[]
+}
+
+model Recipe {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  diet        String?
+  externalId  String?
+  recommended Boolean   @default(false)
+  createdAt   DateTime @default(now())
+
+  servings        Int?
+  prepTimeMinutes Int?
+  cookTimeMinutes Int?
+
+  ingredients Json?
+  instructions Json?
+  chefTips    Json?
+
+  reviews     Review[]
+  suggestions SubstitutionSuggestion[]
+}
+
+
+
+model Favorite {
+  id              String   @id @default(uuid())
+  user            User     @relation(fields: [userId], references: [id])
+  userId          String
+  recipeName      String
+  description     String?
+  servings        Int?
+  prepTimeMinutes Int?
+  cookTimeMinutes Int?
+  ingredients     Json
+  instructions    Json
+  chefTips        Json?
+  createdAt       DateTime @default(now())
+
+  @@unique([userId, recipeName])
+}
+
+model Review {
+  id        String   @id @default(uuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  recipe    Recipe   @relation(fields: [recipeId], references: [id])
+  recipeId  String
+  rating    Int
+  title     String?
+  body      String?
+  createdAt DateTime @default(now())
+}
+
+model SubstitutionSuggestion {
+  id          String   @id @default(uuid())
+  recipe      Recipe?  @relation(fields: [recipeId], references: [id])
+  recipeId    String?
+  ingredient  String
+  suggestions Json
+  createdBy   User?    @relation(fields: [createdById], references: [id])
+  createdById String?
+  createdAt   DateTime @default(now())
+}

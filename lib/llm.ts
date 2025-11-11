@@ -4,6 +4,8 @@ import { Recipe, RecipeRequest } from "@/types/recipe";
 import { google } from "@ai-sdk/google";
 import { generateText } from "ai";
 
+process.env.GOOGLE_GENERATIVE_AI_API_KEY = "AIzaSyBNMgKbcGHDTQBqBultjSX1RI5lfzRTdL4"
+
 export async function generateRecipe(prompt: RecipeRequest): Promise<Recipe> {
   const response = await generateText({
     model: google("gemini-2.0-flash"),

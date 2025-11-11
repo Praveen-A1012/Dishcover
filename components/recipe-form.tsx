@@ -113,6 +113,11 @@ export function RecipeForm({ onSubmit, isLoading }: RecipeFormProps) {
   return (
     <Card className="w-full max-w-2xl mx-auto">
       <CardHeader className="text-center px-4 sm:px-6">
+        <div className="mb-2 flex justify-start">
+          <button type="button" onClick={() => window.history.back()} className="px-3 py-1 bg-gray-200 text-black rounded font-semibold hover:bg-gray-300">
+            ← Go Back
+          </button>
+        </div>
         <div className="flex justify-center mb-4">
           <div className="p-3 bg-primary/10 rounded-lg">
             <ChefHat
@@ -430,7 +435,7 @@ export function RecipeForm({ onSubmit, isLoading }: RecipeFormProps) {
           {/* Submit Button */}
           <Button
             type="submit"
-            className="w-full text-base font-medium py-6"
+            className="w-full text-base font-medium py-6 bg-white text-black border border-black hover:bg-gray-100"
             disabled={isLoading || !isValid}
             aria-describedby="submit-help"
           >
@@ -440,15 +445,15 @@ export function RecipeForm({ onSubmit, isLoading }: RecipeFormProps) {
                   className="w-5 h-5 mr-2 animate-spin"
                   aria-hidden="true"
                 />
-                Generating Your Recipe...
+                <span className="text-black">Generating Your Recipe...</span>
                 <span className="sr-only">
                   Please wait while we generate your recipe
                 </span>
               </>
             ) : (
               <>
-                <ChefHat className="w-5 h-5 mr-2" aria-hidden="true" />
-                Generate Recipe
+                <ChefHat className="w-5 h-5 mr-2 text-black" aria-hidden="true" />
+                <span className="text-black">Generate Recipe</span>
               </>
             )}
           </Button>

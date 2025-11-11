@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { Recipe, PantryItem, Timer } from "@/types/recipe";
 import {
   Card,
@@ -46,10 +45,7 @@ import {
   Scale,
   List,
   PlayCircle,
-  Heart,
-  HeartOff,
 } from "lucide-react";
-// Server-backed favorites via API
 import { scaleQuantity, extractTimeFromInstruction } from "@/lib/recipe-utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
@@ -74,70 +70,6 @@ export function RecipeDisplay({
   onStartOver,
 }: RecipeDisplayProps) {
   const [recipe, setRecipe] = useState<Recipe>(initialRecipe);
-  const [isFav, setIsFav] = useState(false);
-
-  // Check if this recipe is already favorited (server)
-  useEffect(() => {
-    (async () => {
-      const token = localStorage.getItem("token");
-      if (!token) return;
-      try {
-        const res = await fetch("/api/favourites", { headers: { Authorization: `Bearer ${token}` } });
-        if (!res.ok) return;
-        const j = await res.json();
-        const found = (j.favorites || []).some((f: any) => f.recipeName === initialRecipe.recipeName);
-        setIsFav(found);
-      } catch (e) {
-        // ignore
-      }
-    })();
-  }, [initialRecipe.recipeName]);
-
-  const router = useRouter();
-
-  const handleToggleFavorite = async () => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      router.replace("/login");
-      return;
-    }
-
-    if (isFav) {
-      const res = await fetch("/api/favourites", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ recipeName: initialRecipe.recipeName }),
-      });
-      if (res.ok) {
-        setIsFav(false);
-        toast.success("Removed from favorites");
-      }
-    } else {
-      const payload = {
-        recipe: {
-          recipeName: initialRecipe.recipeName,
-          description: initialRecipe.description,
-          servings: initialRecipe.servings,
-          prepTimeMinutes: initialRecipe.prepTimeMinutes,
-          cookTimeMinutes: initialRecipe.cookTimeMinutes,
-          ingredients: initialRecipe.ingredients,
-          instructions: initialRecipe.instructions,
-          chefTips: initialRecipe.chefTips,
-        },
-      };
-
-      const res = await fetch("/api/favourites", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify(payload),
-      });
-      if (res.ok) {
-        setIsFav(true);
-        toast.success("Recipe saved to favorites!");
-      }
-    }
-  };
-
   const [scaleFactor, setScaleFactor] = useState(1);
   const [checkedIngredients, setCheckedIngredients] = useState<Set<number>>(
     new Set()
@@ -154,8 +86,6 @@ export function RecipeDisplay({
   useEffect(() => {
     setPantryItems(getPantryItems());
   }, []);
- // ...existing code...
-
 
   const scaleRecipe = (newScale: number) => {
     if (newScale <= 0) return;
@@ -451,10 +381,10 @@ export function RecipeDisplay({
               </div>
             </div>
             <div className="space-y-2">
-              <CardTitle className="text-2xl sm:text-3xl lg:text-4xl font-bold text-black">
+              <CardTitle className="text-2xl sm:text-3xl lg:text-4xl font-bold">
                 {recipe.recipeName}
               </CardTitle>
-              <CardDescription className="text-base sm:text-lg max-w-2xl mx-auto text-black">
+              <CardDescription className="text-base sm:text-lg max-w-2xl mx-auto">
                 {recipe.description}
               </CardDescription>
             </div>
@@ -595,27 +525,6 @@ export function RecipeDisplay({
               </div>
             </CardContent>
           </Card>
-
-          {/* fav button */}
-          <CardHeader className="text-center space-y-4 relative">
-          <div className="flex justify-between items-center">
-            <div className="flex justify-center">
-              <div className="p-4 bg-primary/10 rounded-2xl">
-                <ChefHat className="w-8 h-8 text-primary" />
-              </div>
-            </div>
-
-          </div>
-
-          <div className="space-y-2">
-            <CardTitle className="text-2xl sm:text-3xl lg:text-4xl font-bold text-black">
-              {recipe.recipeName}
-            </CardTitle>
-            <CardDescription className="text-base sm:text-lg max-w-2xl mx-auto text-black">
-              {recipe.description}
-            </CardDescription>
-          </div>
-        </CardHeader>
 
           {/* Ingredients List */}
           <Card>
@@ -888,18 +797,6 @@ export function RecipeDisplay({
           </div>
         </DialogContent>
       </Dialog>
-
-      <div className="flex justify-center mt-6">
-          <Button
-            variant="outline"
-            onClick={handleToggleFavorite}
-            className="flex-1 sm:flex-none bg-purple-100 hover:bg-purple-200 font-semibold text-purple-700"
-            size="default"
-          >
-            {isFav ? "Remove from Favorites" : "Save to Favorites"}
-          </Button>
-        </div>
-
 
       {/* Pantry Manager Dialog */}
       <Dialog open={showPantryManager} onOpenChange={setShowPantryManager}>

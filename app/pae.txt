@@ -1,0 +1,84 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { RecipeForm } from "@/components/recipe-form";
+import { RecipeDisplay } from "@/components/recipe-display";
+import { generateRecipe } from "@/lib/llm";
+import { Recipe, RecipeRequest, RecipeRequestFormData } from "@/types/recipe";
+import { toast } from "sonner";
+
+export default function HomePage() {
+  const router = useRouter();
+  const [loading, setLoading] = useState(true);
+  const [recipe, setRecipe] = useState<Recipe | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Check if user is logged in
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      router.replace("/login"); // redirect if not logged in
+    } else {
+      setLoading(false); // token exists, show content
+    }
+  }, [router]);
+
+  if (loading) {
+    return <div className="text-center mt-20 text-gray-600">Loading...</div>;
+  }
+
+  // Handle recipe request
+  const handleRecipeRequest = async (request: RecipeRequestFormData) => {
+    const recipeRequest: RecipeRequest = {
+      mainDish: request.mainDish,
+      dietaryRestrictions: request.dietaryRestrictions,
+      availableIngredients: request.availableIngredients,
+      maxCookingTime: request.maxCookingTime,
+      servingSize: request.servingSize,
+    };
+
+    setIsGenerating(true);
+    setError(null);
+
+    try {
+      const generatedRecipe = await generateRecipe(recipeRequest);
+      setRecipe(generatedRecipe);
+      toast.success("Recipe generated successfully!");
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to generate recipe";
+      setError(errorMessage);
+      toast.error(errorMessage);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleStartOver = () => {
+    setRecipe(null);
+    setError(null);
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-indigo-100 via-purple-50 to-pink-100 p-6">
+      <main className="max-w-4xl mx-auto">
+        {!recipe ? (
+          <>
+            <h1 className="text-3xl font-bold text-center mb-8">
+              Generate Your Recipe
+            </h1>
+            <RecipeForm onSubmit={handleRecipeRequest} isLoading={isGenerating} />
+
+            {error && (
+              <div className="mt-4 text-red-500 text-center">{error}</div>
+            )}
+          </>
+        ) : (
+          <RecipeDisplay recipe={recipe} onStartOver={handleStartOver} />
+        )}
+      </main>
+    </div>
+  );
+}
