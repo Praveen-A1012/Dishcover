@@ -33,7 +33,10 @@ export default function Header() {
     }
     setLoadingSearch(true);
     try {
-      const res = await fetch(`/api/recipes/search?query=${encodeURIComponent(query)}`);
+      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+      const res = await fetch(`/api/recipes/search?query=${encodeURIComponent(query)}` , {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      });
       if (res.ok) {
         const data = await res.json();
         setSearchResults(data.recipes || []);
@@ -144,17 +147,21 @@ export default function Header() {
             </form>
             {searchResults.length > 0 && (
               <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-md mt-1 shadow-lg z-50 max-h-64 overflow-y-auto text-gray-800">
-                {searchResults.map((r) => (
-                  <div key={r.id} className="flex justify-between items-center px-3 py-2 hover:bg-gray-100">
-                    <span className="truncate max-w-[55%] font-medium">{r.title}</span>
-                    <button
-                      onClick={() => addToFavorites(r)}
-                      className="text-xs bg-indigo-500 text-white px-2 py-1 rounded"
-                    >
-                      Add
-                    </button>
-                  </div>
-                ))}
+                {searchResults.map((r) => {
+                  const added = !!r.isFavorite;
+                  return (
+                    <div key={r.id} className="flex justify-between items-center px-3 py-2 hover:bg-gray-100">
+                      <span className="truncate max-w-[55%] font-medium">{r.title}</span>
+                      <button
+                        onClick={() => !added && addToFavorites(r)}
+                        disabled={added}
+                        className={`text-xs px-2 py-1 rounded ${added ? 'bg-gray-300 text-gray-700 cursor-not-allowed' : 'bg-indigo-500 text-white'}`}
+                      >
+                        {added ? 'Added' : 'Add'}
+                      </button>
+                    </div>
+                  );
+                })}
               </div>
             )}
             {searchQuery && !loadingSearch && searchResults.length === 0 && (

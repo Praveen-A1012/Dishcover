@@ -4,7 +4,10 @@ import { Recipe, RecipeRequest } from "@/types/recipe";
 import { google } from "@ai-sdk/google";
 import { generateText } from "ai";
 
-process.env.GOOGLE_GENERATIVE_AI_API_KEY = "AIzaSyBNMgKbcGHDTQBqBultjSX1RI5lfzRTdL4"
+// Use environment variable for Google API key
+if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
+  throw new Error("GOOGLE_GENERATIVE_AI_API_KEY is not set in environment variables");
+}
 
 export async function generateRecipe(prompt: RecipeRequest): Promise<Recipe> {
   const response = await generateText({
