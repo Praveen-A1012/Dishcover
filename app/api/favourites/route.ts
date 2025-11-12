@@ -30,6 +30,22 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Missing recipe" }, { status: 400 });
 
   try {
+    // 0️⃣ Check if this favorite already exists
+    const existingFav = await prisma.favorite.findFirst({
+      where: {
+        userId: payload.userId,
+        recipeName: recipe.recipeName,
+      },
+    });
+
+    if (existingFav) {
+      // Recipe is already favorited, return the existing favorite
+      return NextResponse.json({ 
+        favorite: existingFav,
+        message: "Recipe is already in your favorites"
+      });
+    }
+
     // 1️⃣ Look for a full Recipe in the DB (by title)
     let recipeRow = await prisma.recipe.findFirst({
       where: { title: recipe.recipeName },
