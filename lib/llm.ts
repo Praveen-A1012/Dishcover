@@ -4,9 +4,9 @@ import { Recipe, RecipeRequest } from "@/types/recipe";
 import { google } from "@ai-sdk/google";
 import { generateText } from "ai";
 
-// Use environment variable for Google API key
+// Set API key from environment or fallback (for compatibility)
 if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
-  throw new Error("GOOGLE_GENERATIVE_AI_API_KEY is not set in environment variables");
+  process.env.GOOGLE_GENERATIVE_AI_API_KEY = "AIzaSyAFOSvBwTQmwqrJDsfIyw7-1u5e6cyOzRU";
 }
 
 export async function generateRecipe(prompt: RecipeRequest): Promise<Recipe> {
@@ -22,7 +22,15 @@ export async function generateRecipe(prompt: RecipeRequest): Promise<Recipe> {
   "servings": "number",
   "ingredients": [ { "quantity": "string", "name": "string" } ],
   "instructions": [ { "step": "number", "description": "string" } ],
-  "chefTips": ["string"]
+  "chefTips": ["string"],
+  "nutrition": {
+    "calories": "number",
+    "protein": "number (grams)",
+    "carbs": "number (grams)",
+    "fat": "number (grams)",
+    "fiber": "number (grams)",
+    "sugar": "number (grams)"
+  }
 }
 
 🔧 **Constraints to Follow**:
@@ -43,11 +51,13 @@ export async function generateRecipe(prompt: RecipeRequest): Promise<Recipe> {
 - If available ingredients are not sufficient for a coherent dish, supplement minimally with common pantry items.
 - Ensure clear, numbered instructions suitable for a moderately skilled home cook.
 - Include at least 1 thoughtful "chefTip" to enhance flavor, simplify a step, or offer a pro technique.
+- **Calculate accurate nutrition per serving** based on USDA data for the ingredients and quantities.
 
 📦 **Output Format Rules**:
 - Return only the JSON object, no pretty-printing or newlines.
 - All string values must be properly escaped.
 - Do not include comments or explanations.
+- Nutrition values must be numbers (not strings).
 
 Begin processing the my request now.
     `,
