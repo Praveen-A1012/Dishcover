@@ -4,12 +4,22 @@ import { Recipe, RecipeRequest } from "@/types/recipe";
 import { google } from "@ai-sdk/google";
 import { generateText } from "ai";
 
-// Set API key from environment or fallback (for compatibility)
-if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
-  process.env.GOOGLE_GENERATIVE_AI_API_KEY = "AIzaSyAFOSvBwTQmwqrJDsfIyw7-1u5e6cyOzRU";
-}
+// Validate and get API key - Set it globally for the google provider
+const ensureApiKey = () => {
+  if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
+    throw new Error(
+      "GOOGLE_GENERATIVE_AI_API_KEY is not set. Please add it to your Vercel environment variables:\n" +
+      "1. Go to Vercel Dashboard → Your Project → Settings → Environment Variables\n" +
+      "2. Add GOOGLE_GENERATIVE_AI_API_KEY with your valid API key\n" +
+      "3. Get a new key from: https://makersuite.google.com/app/apikey"
+    );
+  }
+};
 
 export async function generateRecipe(prompt: RecipeRequest): Promise<Recipe> {
+  // Ensure API key is available before making the call
+  ensureApiKey();
+  
   const response = await generateText({
     model: google("gemini-2.0-flash"),
     system:
@@ -104,6 +114,9 @@ export async function generateIngredientSubstitution(
   ingredient: string,
   restriction: string
 ): Promise<string> {
+  // Ensure API key is available
+  ensureApiKey();
+  
   const response = await generateText({
     model: google("gemini-2.0-flash"),
     system:
