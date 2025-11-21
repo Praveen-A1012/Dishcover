@@ -10,7 +10,7 @@ Meal helps individuals and families:
 - Plan weekly meals and generate shopping lists
 - Track pantry inventory and reduce food waste
 - Use cooking mode with step-by-step instructions and timers
-
+- Gives Suggestions for ingredients
 ## 🛠️ Key Features
 
 - **Recipe Management:** Add, edit, and view recipes with rich details
